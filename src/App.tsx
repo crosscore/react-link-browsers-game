@@ -7,7 +7,6 @@ interface Circle {
 }
 
 const WEBSOCKET_URL = "ws://localhost:8080";
-const MOVEMENT_CHECK_INTERVAL = 10;
 
 const App: React.FC = () => {
   const [circle, setCircle] = useState<Circle | null>(null);
@@ -22,7 +21,6 @@ const App: React.FC = () => {
   useEffect(() => {
     const connectWebSocket = () => {
       ws.current = new WebSocket(WEBSOCKET_URL);
-
       if (ws.current) {
         ws.current.onopen = () => {
           console.log("Connected to the server");
@@ -41,21 +39,6 @@ const App: React.FC = () => {
       }
     };
 
-    let lastX = window.screenX;
-    let lastY = window.screenY;
-    const checkWindowMovement = () => {
-      if (window.screenX !== lastX || window.screenY !== lastY) {
-        sendWindowInfo();
-        lastX = window.screenX;
-        lastY = window.screenY;
-      }
-    };
-
-    const movementCheckInterval = setInterval(
-      checkWindowMovement,
-      MOVEMENT_CHECK_INTERVAL
-    );
-
     const sendWindowInfo = () => {
       const windowInfo = {
         screenX: window.screenX,
@@ -73,7 +56,20 @@ const App: React.FC = () => {
       }
     };
 
+    let lastX = window.screenX;
+    let lastY = window.screenY;
+    let mouseMoveTimeout: NodeJS.Timeout;
+    const handleMouseMove = () => {
+      if (lastX !== window.screenX || lastY !== window.screenY) {
+        clearTimeout(mouseMoveTimeout);
+        mouseMoveTimeout = setTimeout(sendWindowInfo, 100);
+        lastX = window.screenX;
+        lastY = window.screenY;
+      }
+    };
+
     window.addEventListener("resize", sendWindowInfo);
+    window.addEventListener("mousemove", handleMouseMove);
 
     const handleKeyPress = (event: KeyboardEvent) => {
       if (ws.current && ws.current.readyState === WebSocket.OPEN) {
@@ -90,7 +86,7 @@ const App: React.FC = () => {
       }
       window.removeEventListener("keydown", handleKeyPress);
       window.removeEventListener("resize", sendWindowInfo);
-      clearInterval(movementCheckInterval);
+      window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
 

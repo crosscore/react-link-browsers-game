@@ -24,4 +24,6 @@ wss.on("connection", (ws) => {
     clientWindowInfo.delete(ws);
     console.log("Client disconnected");
   });
+
+  sendCirclePositions(wss, clientWindowInfo, isOpen);
 });
