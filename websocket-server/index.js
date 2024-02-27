@@ -1,6 +1,6 @@
 // websocket-server/index.js
 const WebSocket = require("ws");
-const { initializeCirclePosition, startUpdatingCirclePosition, stopUpdatingCirclePosition, sendCirclePositions } = require("./circleMotion");
+const { initializePlayerPosition, startUpdatingPlayerPosition, stopUpdatingPlayerPosition, sendPlayerPositions } = require("./playerMotion");
 
 const PORT = 8080;
 const wss = new WebSocket.Server({ port: PORT });
@@ -15,23 +15,23 @@ wss.on("connection", (ws) => {
     switch (msg.type) {
       case "windowInfo":
         if (!clientWindowInfo.has(ws)) {
-          initializeCirclePosition(msg.data);
+          initializePlayerPosition(msg.data);
         }
         clientWindowInfo.set(ws, msg.data);
         console.log("Client window info", msg.data);
-        sendCirclePositions(wss, clientWindowInfo, isOpen);
+        sendPlayerPositions(wss, clientWindowInfo, isOpen);
         break;
-      case "startMovingCircle":
+      case "startMovingPlayer":
         activeKeys.add(msg.key);
         console.log("Active keys", activeKeys);
         if (activeKeys.size === 1) {
-          startUpdatingCirclePosition(activeKeys, wss, clientWindowInfo, isOpen);
+          startUpdatingPlayerPosition(activeKeys, wss, clientWindowInfo, isOpen);
         }
         break;
-      case "stopMovingCircle":
+      case "stopMovingPlayer":
         activeKeys.delete(msg.key);
         if (activeKeys.size === 0) {
-          stopUpdatingCirclePosition();
+          stopUpdatingPlayerPosition();
         }
         break;
       default:
@@ -46,4 +46,3 @@ wss.on("connection", (ws) => {
 });
 
 console.log(`WebSocket server is running on port ${PORT}`);
-

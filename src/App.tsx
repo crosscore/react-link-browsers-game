@@ -1,7 +1,7 @@
 // src/App.tsx
 import React, { useEffect, useState, useRef } from "react";
 
-interface Circle {
+interface Player {
   x: number;
   y: number;
 }
@@ -9,7 +9,7 @@ interface Circle {
 const WEBSOCKET_URL = "ws://localhost:8080";
 
 const App: React.FC = () => {
-  const [circle, setCircle] = useState<Circle | null>(null);
+  const [player, setPlayer] = useState<Player | null>(null);
   const ws = useRef<WebSocket | null>(null);
   const lastWindowInfo = useRef({screenX: 0, screenY: 0, innerWidth: 0, innerHeight: 0});
 
@@ -42,23 +42,23 @@ const App: React.FC = () => {
           console.log("WebSocket Connection Closed");
         };
         ws.current.onmessage = (event) => {
-          const newCircle = JSON.parse(event.data);
-          setCircle(newCircle);
-          console.log("Received new circle:", newCircle);
+          const newPlayer = JSON.parse(event.data);
+          setPlayer(newPlayer);
+          console.log("Received new player:", newPlayer);
         };
       }
     };
 
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.repeat) return; // 長押しによる連続イベントを無視
+      if (event.repeat) return; // Ignore repeated key presses
       if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({ type: "startMovingCircle", key: event.key }));
+        ws.current.send(JSON.stringify({ type: "startMovingPlayer", key: event.key }));
       }
     };
 
     const handleKeyRelease = (event: KeyboardEvent) => {
       if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({ type: "stopMovingCircle", key: event.key }));
+        ws.current.send(JSON.stringify({ type: "stopMovingPlayer", key: event.key }));
       }
     };
 
@@ -78,8 +78,8 @@ const App: React.FC = () => {
   return (
     <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
       <svg width="100vw" height="100vh">
-        {circle && (
-          <circle cx={circle.x} cy={circle.y} r="60" fill="#47b0dc" />
+        {player && (
+          <circle cx={player.x} cy={player.y} r="60" fill="#47b0dc" />
         )}
       </svg>
     </div>
