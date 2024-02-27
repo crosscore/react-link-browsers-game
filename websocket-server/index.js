@@ -1,6 +1,6 @@
 // websocket-server/index.js
 const WebSocket = require("ws");
-const { updateCirclePosition, sendCirclePositions } = require("./circleMotion");
+const { initializeCirclePosition, updateCirclePosition, sendCirclePositions } = require("./circleMotion");
 
 const PORT = 8080;
 const wss = new WebSocket.Server({ port: PORT });
@@ -12,14 +12,22 @@ wss.on("connection", (ws) => {
   ws.on("message", (message) => {
     const msg = JSON.parse(message);
     if (msg.type === "windowInfo") {
+      if (!clientWindowInfo.has(ws)) {
+        initializeCirclePosition(msg.data);
+      };
       clientWindowInfo.set(ws, msg.data);
       console.log("Client window info", msg.data);
       updateCirclePosition(msg.key);
       sendCirclePositions(wss, clientWindowInfo, isOpen);
     } else if (msg.type === "moveCircle") {
-      console.log(msg.key);
-      updateCirclePosition(msg.key);
-      sendCirclePositions(wss, clientWindowInfo, isOpen);
+      const clientWindowSize = clientWindowInfo.get(ws);
+      if (clientWindowSize) {
+        console.log(msg.key);
+        updateCirclePosition(msg.key);
+        sendCirclePositions(wss, clientWindowInfo, isOpen);
+      } else {
+        console.log("Error: clientWindowSize is not defined.");
+      }
     }
   });
 

@@ -1,7 +1,13 @@
 // websocket-server/circleMotion.js
 
-const circle = { x: 0, y: 0 };
+
 const stepSize = 30;
+const circle = {};
+
+function initializeCirclePosition(clientWindowSize) {
+  circle.x = clientWindowSize.innerWidth / 2;
+  circle.y = clientWindowSize.innerHeight / 2;
+}
 
 function updateCirclePosition(key) {
   switch (key) {
@@ -43,6 +49,7 @@ function sendCirclePositions(wss, clientWindowInfo, isOpen) {
 }
 
 module.exports = {
+  initializeCirclePosition,
   updateCirclePosition,
   sendCirclePositions,
 };
