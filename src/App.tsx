@@ -79,7 +79,7 @@ const App: React.FC = () => {
     <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
       <svg width="100vw" height="100vh">
         {circle && (
-          <circle cx={circle.x} cy={circle.y} r="180" fill="#47b0dc" />
+          <circle cx={circle.x} cy={circle.y} r="60" fill="#47b0dc" />
         )}
       </svg>
     </div>

@@ -7,6 +7,7 @@ const wss = new WebSocket.Server({ port: PORT });
 const clientWindowInfo = new Map();
 
 const isOpen = (ws) => ws.readyState === WebSocket.OPEN;
+const activeKeys = new Set();
 
 wss.on("connection", (ws) => {
   ws.on("message", (message) => {
@@ -21,15 +22,17 @@ wss.on("connection", (ws) => {
         sendCirclePositions(wss, clientWindowInfo, isOpen);
         break;
       case "startMovingCircle":
-        const startKey = msg.key;
-        console.log(`Start moving circle with key: ${startKey}`);
-        startUpdatingCirclePosition(startKey, wss, clientWindowInfo, isOpen);
-        sendCirclePositions(wss, clientWindowInfo, isOpen);
+        activeKeys.add(msg.key);
+        console.log("Active keys", activeKeys);
+        if (activeKeys.size === 1) {
+          startUpdatingCirclePosition(activeKeys, wss, clientWindowInfo, isOpen);
+        }
         break;
       case "stopMovingCircle":
-        console.log(`Stop moving circle with key: ${msg.key}`);
-        stopUpdatingCirclePosition();
-        sendCirclePositions(wss, clientWindowInfo, isOpen);
+        activeKeys.delete(msg.key);
+        if (activeKeys.size === 0) {
+          stopUpdatingCirclePosition();
+        }
         break;
       default:
         console.log("Received unknown message type.");
@@ -41,3 +44,6 @@ wss.on("connection", (ws) => {
     console.log("Client disconnected");
   });
 });
+
+console.log(`WebSocket server is running on port ${PORT}`);
+
