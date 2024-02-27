@@ -5,11 +5,14 @@ interface Circle {
   x: number;
   y: number;
 }
+
 const WEBSOCKET_URL = "ws://localhost:8080";
+
 const App: React.FC = () => {
   const [circle, setCircle] = useState<Circle | null>(null);
   const ws = useRef<WebSocket | null>(null);
   const lastWindowInfo = useRef({screenX: 0, screenY: 0, innerWidth: 0, innerHeight: 0});
+
   const sendWindowInfo = () => {
     const windowInfo = {
       screenX: window.screenX,
@@ -20,9 +23,7 @@ const App: React.FC = () => {
     if (JSON.stringify(windowInfo) !== JSON.stringify(lastWindowInfo.current)) {
       lastWindowInfo.current = windowInfo;
       if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        ws.current.send(
-          JSON.stringify({ type: "windowInfo", data: windowInfo })
-        );
+        ws.current.send(JSON.stringify({ type: "windowInfo", data: windowInfo }));
       }
     }
   };
@@ -49,20 +50,27 @@ const App: React.FC = () => {
     };
 
     const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.repeat) return; // 長押しによる連続イベントを無視
       if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({ type: "moveCircle", key: event.key }));
+        ws.current.send(JSON.stringify({ type: "startMovingCircle", key: event.key }));
+      }
+    };
+
+    const handleKeyRelease = (event: KeyboardEvent) => {
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({ type: "stopMovingCircle", key: event.key }));
       }
     };
 
     setTimeout(connectWebSocket, 1);
     window.addEventListener("keydown", handleKeyPress);
+    window.addEventListener("keyup", handleKeyRelease);
     const intervalId = setInterval(sendWindowInfo, 100);
 
     return () => {
-      if (ws.current) {
-        ws.current.close();
-      }
+      ws.current?.close();
       window.removeEventListener("keydown", handleKeyPress);
+      window.removeEventListener("keyup", handleKeyRelease);
       clearInterval(intervalId);
     };
   }, []);
