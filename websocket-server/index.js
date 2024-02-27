@@ -13,6 +13,9 @@ wss.on("connection", (ws) => {
     const msg = JSON.parse(message);
     if (msg.type === "windowInfo") {
       clientWindowInfo.set(ws, msg.data);
+      console.log("Client window info", msg.data);
+      updateCirclePosition(msg.key);
+      sendCirclePositions(wss, clientWindowInfo, isOpen);
     } else if (msg.type === "moveCircle") {
       console.log(msg.key);
       updateCirclePosition(msg.key);
@@ -24,6 +27,4 @@ wss.on("connection", (ws) => {
     clientWindowInfo.delete(ws);
     console.log("Client disconnected");
   });
-
-  sendCirclePositions(wss, clientWindowInfo, isOpen);
 });

@@ -5,18 +5,27 @@ interface Circle {
   x: number;
   y: number;
 }
-
 const WEBSOCKET_URL = "ws://localhost:8080";
-
 const App: React.FC = () => {
   const [circle, setCircle] = useState<Circle | null>(null);
   const ws = useRef<WebSocket | null>(null);
-  const lastWindowInfo = useRef({
-    screenX: 0,
-    screenY: 0,
-    innerWidth: 0,
-    innerHeight: 0,
-  });
+  const lastWindowInfo = useRef({screenX: 0, screenY: 0, innerWidth: 0, innerHeight: 0});
+  const sendWindowInfo = () => {
+    const windowInfo = {
+      screenX: window.screenX,
+      screenY: window.screenY,
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight,
+    };
+    if (JSON.stringify(windowInfo) !== JSON.stringify(lastWindowInfo.current)) {
+      lastWindowInfo.current = windowInfo;
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        ws.current.send(
+          JSON.stringify({ type: "windowInfo", data: windowInfo })
+        );
+      }
+    }
+  };
 
   useEffect(() => {
     const connectWebSocket = () => {
@@ -24,7 +33,6 @@ const App: React.FC = () => {
       if (ws.current) {
         ws.current.onopen = () => {
           console.log("Connected to the server");
-          sendWindowInfo();
         };
         ws.current.onerror = (error) => {
           console.error("WebSocket Error:", error);
@@ -35,41 +43,10 @@ const App: React.FC = () => {
         ws.current.onmessage = (event) => {
           const newCircle = JSON.parse(event.data);
           setCircle(newCircle);
+          console.log("Received new circle:", newCircle);
         };
       }
     };
-
-    const sendWindowInfo = () => {
-      const windowInfo = {
-        screenX: window.screenX,
-        screenY: window.screenY,
-        innerWidth: window.innerWidth,
-        innerHeight: window.innerHeight,
-      };
-      if (JSON.stringify(windowInfo) !== JSON.stringify(lastWindowInfo.current)) {
-        lastWindowInfo.current = windowInfo;
-        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-          ws.current.send(
-            JSON.stringify({ type: "windowInfo", data: windowInfo })
-          );
-        }
-      }
-    };
-
-    let lastX = window.screenX;
-    let lastY = window.screenY;
-    let mouseMoveTimeout: NodeJS.Timeout;
-    const handleMouseMove = () => {
-      if (lastX !== window.screenX || lastY !== window.screenY) {
-        clearTimeout(mouseMoveTimeout);
-        mouseMoveTimeout = setTimeout(sendWindowInfo, 100);
-        lastX = window.screenX;
-        lastY = window.screenY;
-      }
-    };
-
-    window.addEventListener("resize", sendWindowInfo);
-    window.addEventListener("mousemove", handleMouseMove);
 
     const handleKeyPress = (event: KeyboardEvent) => {
       if (ws.current && ws.current.readyState === WebSocket.OPEN) {
@@ -77,16 +54,16 @@ const App: React.FC = () => {
       }
     };
 
-    window.addEventListener("keydown", handleKeyPress);
     setTimeout(connectWebSocket, 1);
+    window.addEventListener("keydown", handleKeyPress);
+    const intervalId = setInterval(sendWindowInfo, 100);
 
     return () => {
       if (ws.current) {
         ws.current.close();
       }
       window.removeEventListener("keydown", handleKeyPress);
-      window.removeEventListener("resize", sendWindowInfo);
-      window.removeEventListener("mousemove", handleMouseMove);
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -94,7 +71,7 @@ const App: React.FC = () => {
     <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
       <svg width="100vw" height="100vh">
         {circle && (
-          <circle cx={circle.x} cy={circle.y} r="180" fill="#910A67" />
+          <circle cx={circle.x} cy={circle.y} r="180" fill="#47b0dc" />
         )}
       </svg>
     </div>
