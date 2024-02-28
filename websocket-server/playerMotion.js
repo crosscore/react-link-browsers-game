@@ -1,12 +1,11 @@
 // websocket-server/playerMotion.js
 const { sendPositions } = require("./sharedMotionUtils");
-const players = new Map(); // New: Store players by clientID
+const players = new Map();
 
 const stepSize = 5;
 let intervalId = null;
 
 function initializePlayerPosition(clientWindowSize, clientID) {
-  // Adjusted to manage player by clientID
   const player = {
     x: clientWindowSize.innerWidth / 2,
     y: clientWindowSize.innerHeight / 2,
@@ -19,13 +18,11 @@ function initializePlayerPosition(clientWindowSize, clientID) {
 function updatePlayerPosition(activeKeys, clientID) {
   const player = players.get(clientID);
   if (!player) return;
-  
   if (activeKeys.has('w')) player.y -= stepSize;
   if (activeKeys.has('a')) player.x -= stepSize;
   if (activeKeys.has('s')) player.y += stepSize;
   if (activeKeys.has('d')) player.x += stepSize;
-
-  players.set(clientID, player); // Update the player's position
+  players.set(clientID, player);
 }
 
 function startUpdatingPlayerPosition(activeKeys, wss, clientWindowInfo, isOpen, clientID) {

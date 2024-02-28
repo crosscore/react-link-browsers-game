@@ -2,7 +2,7 @@
 const WebSocket = require("ws");
 const { v4: uuidv4 } = require("uuid");
 const { initializePlayerPosition, startUpdatingPlayerPosition, stopUpdatingPlayerPosition, sendPlayerPositions } = require("./playerMotion");
-
+const { createBullet, updateBulletPositions } = require("./bulletMotion");
 const PORT = 8080;
 const wss = new WebSocket.Server({ port: PORT });
 const clientWindowInfo = new Map();
@@ -30,7 +30,13 @@ wss.on("connection", (ws) => {
         activeKeys.add(msg.key);
         console.log("Active keys", activeKeys);
         if (activeKeys.size === 1) {
-          startUpdatingPlayerPosition(activeKeys, wss, clientWindowInfo, isOpen, clientID);
+          startUpdatingPlayerPosition(
+            activeKeys,
+            wss,
+            clientWindowInfo,
+            isOpen,
+            clientID
+          );
         }
         break;
       case "stopMovingPlayer":
@@ -38,6 +44,10 @@ wss.on("connection", (ws) => {
         if (activeKeys.size === 0) {
           stopUpdatingPlayerPosition(clientID);
         }
+        break;
+      case "createBullet":
+        const { x, y, targetX, targetY } = msg;
+        createBullet(x, y, targetX, targetY);
         break;
       default:
         console.log("Received unknown message type.");
@@ -50,5 +60,9 @@ wss.on("connection", (ws) => {
     clientIDs.delete(ws);
   });
 });
+
+setInterval(() => {
+  updateBulletPositions(wss, clientWindowInfo, isOpen);
+}, 16);
 
 console.log(`WebSocket server is running on port ${PORT}`);

@@ -1,8 +1,15 @@
 // src/App.tsx
 import React, { useEffect, useState, useRef } from "react";
 import Player from "./Player";
+import Bullet from "./Bullet";
 
 interface PlayerState {
+  x: number;
+  y: number;
+}
+
+interface BulletState {
+  id: number;
   x: number;
   y: number;
 }
@@ -11,6 +18,7 @@ const WEBSOCKET_URL = "ws://localhost:8080";
 
 const App: React.FC = () => {
   const [player, setPlayer] = useState<PlayerState | null>(null);
+  const [bullets, setBullets] = useState<BulletState[]>([]);
   const ws = useRef<WebSocket | null>(null);
   const lastWindowInfo = useRef({screenX: 0, screenY: 0, innerWidth: 0, innerHeight: 0});
 
@@ -46,8 +54,9 @@ const App: React.FC = () => {
           const data = JSON.parse(event.data);
           if (data.type === 'player') {
             setPlayer(data.position);
+          } else if (data.type === 'bullet') {
+            setBullets(currentBullets => [...currentBullets, data.position]);
           }
-          console.log("Received new player position:", data);
         };
       };
     };
@@ -82,6 +91,7 @@ const App: React.FC = () => {
     <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
       <svg width="100vw" height="100vh">
         {player && <Player x={player.x} y={player.y} />}
+        {bullets.map(bullet => (<Bullet key={bullet.id} x={bullet.x} y={bullet.y} />))}
       </svg>
     </div>
   );
