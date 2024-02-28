@@ -1,15 +1,20 @@
 // websocket-server/index.js
 const WebSocket = require("ws");
+const { v4: uuidv4 } = require("uuid");
 const { initializePlayerPosition, startUpdatingPlayerPosition, stopUpdatingPlayerPosition, sendPlayerPositions } = require("./playerMotion");
 
 const PORT = 8080;
 const wss = new WebSocket.Server({ port: PORT });
 const clientWindowInfo = new Map();
+const clientIDs = new Map();
 
 const isOpen = (ws) => ws.readyState === WebSocket.OPEN;
 const activeKeys = new Set();
 
 wss.on("connection", (ws) => {
+  const clientID = uuidv4();
+  clientIDs.set(ws, clientID);
+  console.log(`Client connected: ${clientID}`);
   ws.on("message", (message) => {
     const msg = JSON.parse(message);
     switch (msg.type) {
@@ -41,7 +46,8 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => {
     clientWindowInfo.delete(ws);
-    console.log("Client disconnected");
+    console.log(`Client disconnected: ${clientIDs.get(ws)}`);
+    clientIDs.delete(ws);
   });
 });
 

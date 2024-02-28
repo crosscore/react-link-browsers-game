@@ -1,7 +1,8 @@
 // src/App.tsx
 import React, { useEffect, useState, useRef } from "react";
+import Player from "./Player";
 
-interface Player {
+interface PlayerState {
   x: number;
   y: number;
 }
@@ -9,7 +10,7 @@ interface Player {
 const WEBSOCKET_URL = "ws://localhost:8080";
 
 const App: React.FC = () => {
-  const [player, setPlayer] = useState<Player | null>(null);
+  const [player, setPlayer] = useState<PlayerState | null>(null);
   const ws = useRef<WebSocket | null>(null);
   const lastWindowInfo = useRef({screenX: 0, screenY: 0, innerWidth: 0, innerHeight: 0});
 
@@ -50,7 +51,7 @@ const App: React.FC = () => {
     };
 
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.repeat) return; // Ignore repeated key presses
+      if (event.repeat) return;
       if (ws.current && ws.current.readyState === WebSocket.OPEN) {
         ws.current.send(JSON.stringify({ type: "startMovingPlayer", key: event.key }));
       }
@@ -78,9 +79,7 @@ const App: React.FC = () => {
   return (
     <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
       <svg width="100vw" height="100vh">
-        {player && (
-          <circle cx={player.x} cy={player.y} r="60" fill="#47b0dc" />
-        )}
+        {player && <Player x={player.x} y={player.y} />}
       </svg>
     </div>
   );
