@@ -1,59 +1,61 @@
 // websocket-server/playerMotion.js
+const { sendPositions } = require("./sharedMotionUtils");
+const players = new Map(); // New: Store players by clientID
 
 const stepSize = 5;
-const player = {x: 0, y: 0};
 let intervalId = null;
 
-function initializePlayerPosition(clientWindowSize) {
-  player.x = clientWindowSize.innerWidth / 2;
-  player.y = clientWindowSize.innerHeight / 2;
+function initializePlayerPosition(clientWindowSize, clientID) {
+  // Adjusted to manage player by clientID
+  const player = {
+    x: clientWindowSize.innerWidth / 2,
+    y: clientWindowSize.innerHeight / 2,
+    id: clientID,
+    type: 'player'
+  };
+  players.set(clientID, player);
 }
 
-function updatePlayerPosition(activeKeys) {
+function updatePlayerPosition(activeKeys, clientID) {
+  const player = players.get(clientID);
+  if (!player) return;
+  
   if (activeKeys.has('w')) player.y -= stepSize;
   if (activeKeys.has('a')) player.x -= stepSize;
   if (activeKeys.has('s')) player.y += stepSize;
   if (activeKeys.has('d')) player.x += stepSize;
-  console.log(`Updated position to x: ${player.x}, y: ${player.y}`);
+
+  players.set(clientID, player); // Update the player's position
 }
 
-function startUpdatingPlayerPosition(activeKeys, wss, clientWindowInfo, isOpen) {
+function startUpdatingPlayerPosition(activeKeys, wss, clientWindowInfo, isOpen, clientID) {
   if (intervalId !== null) {
     clearInterval(intervalId);
   }
   intervalId = setInterval(() => {
-    updatePlayerPosition(activeKeys);
-    sendPlayerPositions(wss, clientWindowInfo, isOpen);
+    updatePlayerPosition(activeKeys, clientID);
+    sendPlayerPositions(wss, clientWindowInfo, isOpen, clientID);
   }, 16);
 }
 
-function stopUpdatingPlayerPosition() {
+function stopUpdatingPlayerPosition(clientID) {
   if (intervalId !== null) {
     clearInterval(intervalId);
     intervalId = null;
   }
 }
 
-function sendPlayerPositions(wss, clientWindowInfo, isOpen) {
-  wss.clients.forEach((client) => {
-    if (isOpen(client)) {
-      const windowInfo = clientWindowInfo.get(client);
-      if (windowInfo) {
-        const position = {
-          x: player.x - windowInfo.screenX,
-          y: player.y - windowInfo.screenY,
-        };
-        client.send(JSON.stringify(position));
-        // console.log(`Sending player position: (${player.x}-${windowInfo.screenX}=${player.x - windowInfo.screenX}, ${player.y}-${windowInfo.screenY}=${player.y - windowInfo.screenY})`);
-      }
-    }
-  });
+function sendPlayerPositions(wss, clientWindowInfo, isOpen, clientID) {
+  const player = players.get(clientID);
+  if (player) {
+    sendPositions(wss, clientWindowInfo, isOpen, [player]);
+  }
 }
 
 module.exports = {
   initializePlayerPosition,
-  sendPlayerPositions,
   updatePlayerPosition,
   startUpdatingPlayerPosition,
   stopUpdatingPlayerPosition,
+  sendPlayerPositions
 };

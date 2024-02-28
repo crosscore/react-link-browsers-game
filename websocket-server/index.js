@@ -20,23 +20,23 @@ wss.on("connection", (ws) => {
     switch (msg.type) {
       case "windowInfo":
         if (!clientWindowInfo.has(ws)) {
-          initializePlayerPosition(msg.data);
+          initializePlayerPosition(msg.data, clientID);
         }
         clientWindowInfo.set(ws, msg.data);
         console.log("Client window info", msg.data);
-        sendPlayerPositions(wss, clientWindowInfo, isOpen);
+        sendPlayerPositions(wss, clientWindowInfo, isOpen, clientID);
         break;
       case "startMovingPlayer":
         activeKeys.add(msg.key);
         console.log("Active keys", activeKeys);
         if (activeKeys.size === 1) {
-          startUpdatingPlayerPosition(activeKeys, wss, clientWindowInfo, isOpen);
+          startUpdatingPlayerPosition(activeKeys, wss, clientWindowInfo, isOpen, clientID);
         }
         break;
       case "stopMovingPlayer":
         activeKeys.delete(msg.key);
         if (activeKeys.size === 0) {
-          stopUpdatingPlayerPosition();
+          stopUpdatingPlayerPosition(clientID);
         }
         break;
       default:

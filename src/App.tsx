@@ -43,11 +43,13 @@ const App: React.FC = () => {
           console.log("WebSocket Connection Closed");
         };
         ws.current.onmessage = (event) => {
-          const newPlayer = JSON.parse(event.data);
-          setPlayer(newPlayer);
-          console.log("Received new player:", newPlayer);
+          const data = JSON.parse(event.data);
+          if (data.type === 'player') {
+            setPlayer(data.position);
+          }
+          console.log("Received new player position:", data);
         };
-      }
+      };
     };
 
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -74,7 +76,7 @@ const App: React.FC = () => {
       window.removeEventListener("keyup", handleKeyRelease);
       clearInterval(intervalId);
     };
-  }, []);
+  },[]);
 
   return (
     <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
