@@ -12,7 +12,7 @@ function sendPositions(wss, clientWindowInfo, isOpen, entities) {
             y: entity.y - windowInfo.screenY,
           };
           client.send(JSON.stringify({ type: entity.type, position }));
-          console.log("Sent position", position);
+          //console.log("Sent position", position);
         });
       }
     }

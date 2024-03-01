@@ -7,7 +7,7 @@ interface PlayerProps {
 }
 
 const Player: React.FC<PlayerProps> = ({ x, y }) => {
-  return <circle cx={x} cy={y} r="60" fill="#47b0dc" />;
+  return <circle cx={x} cy={y} r="120" fill="#47b0dc" />;
 };
 
 export default Player;

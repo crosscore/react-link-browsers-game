@@ -2,7 +2,7 @@
 const { sendPositions } = require("./sharedMotionUtils");
 const players = new Map();
 
-const stepSize = 5;
+const stepSize = 10;
 let intervalId = null;
 
 function initializePlayerPosition(clientWindowSize, clientID) {
